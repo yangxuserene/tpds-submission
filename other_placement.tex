@@ -1,0 +1,132 @@
+\section{Other Placement Policies}
+\label{sec: other_placement_policies}
+
+The fact that hybrid job placement can not eliminate the adversary effect of the ``bully" behavior motivates us to explore other job placement policies. 
+\textit{Random Router} placement, which has been studied by Jain et al.\cite{jain-sc14}, is one possible job placement policy for future dragonfly connected systems. 
+In the \textit{Random Router} placement policy, a router is identified as ``idle" if all its attached nodes are available. 
+Idle routers are randomly picked over the network, and all the compute nodes attached to each router are assigned to a single job exclusively. 
+Thus, the allocation made by \textit{Random Router} placement policy can preserve the locality within each router.
+Compared with the random placement we discussed in Section~\ref{sec:placement-schemes}, \textit{Random Router} placement makes a trade-off between the extent of randomness and locality. 
+
+\textit{Random Partition} job placement policy is another possible solution for future dragonfly systems.
+The partition based job placement has been adopted on torus connected HPC systems such as IBM Blue Gene/P and Blue Gene/Q machines to accommodate their capability computing workload.  
+It has been well studied by Zhou and Yang et al.\cite{zhou-ipdps-2015}\cite{Yang-Cluster14}\cite{Yang-ICPADS16}. 
+Similarly, a partition could be configured as a portion of a group in a dragonfly network. 
+For example, in our simulated dragonfly network, we define a partition as half a group, which consists of four routers. Thus, each partition will consist of 16 compute nodes.
+The \textit{Random Partition} job placement policy will assign each job some randomly picked partitions. 
+\textit{Random Partition} placement preserves more locality and renders less randomness compared with \textit{Random Router} placement.
+
+
+\begin{table}[ht]
+\begin{center}
+\caption{Nomenclature for three different random placement and routing configurations} 
+\label{tab: placement routing configs}
+\begin{tabular}{l c c c }
+\toprule % Top horizontal line
+\toprule
+&\multicolumn{3}{c}{Routing } \\ 
+\cmidrule(l){2-4}
+Placement  & Minimal & Adaptive & Prog Adaptive\\ % Column names row
+\midrule
+%Random  &   RM  &   RA   &  RPA   \\ 
+Random &   rand-min  &   rand-adp   &  rand-padp   \\ 
+\midrule % In-table horizontal line
+%Contiguous  &  CM   &   CA   &  CPA   \\ % Content row 1
+RandomRouter &   randR-min  &   randR-adp   &  randR-padp   \\
+\midrule
+%Random  &   RM  &   RA   &  RPA   \\ 
+RandomPartition &   randP-min  &   randP-adp   &  randP-padp   \\ 
+\midrule % In-table horizontal line
+\bottomrule % Bottom horizontal line
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+\subsection{Individual Application Analysis}
+\label{sec:rand3-plcmnt-app-study}
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[height=1.3 in]{rand3-plcmt/mg/commtime}
+        \caption{MultiGrid Communication Time}
+        \label{fig:rand3-plcmt-mg-commtime}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[height=1.3 in]{rand3-plcmt/cr/commtime}
+        \caption{CrystalRouter Communication Time}
+        \label{fig:rand3-plcmt-cr-commtime}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[height=1.3 in]{rand3-plcmt/amg/commtime}
+        \caption{AMG Communication Time}
+        \label{fig:rand3-plcmt-amg-commtime}
+    \end{subfigure}
+   \caption{Application communication time. Workload~\Rmnum{1} is running with three different random placement policies coupled with three routing configurations.}
+   \label{fig:rand3-plcmt-apps-commtime}
+\end{figure*}
+
+We present the communication time distribution of each application in Workload~\Rmnum{1} under
+three different random placement policies and routing configurations, including the random placement policy we discussed in section~\ref{sec:placement-schemes}. These results are presented in Figure~\ref{fig:rand3-plcmt-apps-commtime}. 
+
+As we discussed in section~\ref{sec:workload-1}, MultiGrid and CrystalRouter prefer random placement for the reason that their traffic can be evenly distributed across the network. 
+As shown in Figure~\ref{fig:rand3-plcmt-mg-commtime} and~\ref{fig:rand3-plcmt-cr-commtime}, MultiGrid and CrystalRouter exhibits the similar pattern across three different random placement policies. Both applications suffer performance loss when switching from random (rand) to random router (randR) and random partition(randP).
+Random router placement preserves some extent of locality by assigning all the compute nodes attached to a router to MultiGrid, resulting some MPI ranks reside on those adjacent nodes. 
+And random partition placement makes it worse by grouping four routers together and preserving more locality.
+Local congestion is likely to happen among those adjacent ranks in both applications for the same reason we discussed about contiguous placement in section~\ref{sec:workload-1}. 
+When random partition is coupled with minimal routing, communication of both MultiGrid and CrystalRouter suffer more delay due to the congestion on minimal paths. 
+Adaptive (progressive) can help alleviate that local congestion by routing packets through both minimal and non-minimal paths adaptively. 
+
+Due to its relative small traffic amount, AMG favors allocation with locality to avoid being ``bullied" by the other applications. 
+Random router placement provides allocation with router-level locality. 
+However, the four compute nodes attached to each router can not accommodate the 3D nearest neighbor communication pattern of AMG. 
+Thus, we can only observe very few performance improvement when AMG switching from random to random router placement in Figure~\ref{fig:rand3-plcmt-amg-commtime}.
+When random partition placement is coupled with (progressive) adaptive routing, the performance of AMG is greatly boosted, indicating by the slump in AMG's communication time. 
+Random partition placement makes a better trade-off between locality and randomness for AMG by assigning all compute nodes attached to four routers in the same group to AMG. 
+Although random partition placement coupled with (progressive) adaptive routing can greatly improve AMG's performance, this doesn't mean that it can reduce the ``bully" effect. 
+In fact, the improvement for AMG is achieved by introducing performance degradation to MultiGrid and CrystalRouter. 
+
+
+
+\subsection{Key Observations}
+
+Based the experiments presented in section~\ref{sec:rand3-plcmnt-app-study}, we can make the following observations.
+
+\textit{Neither random router nor random partition placement can eliminate the ``bully" effect.}
+Both placement policies can not avoid AMG sharing network with MultiGrid and CrystalRouter, which is the root cause of ``bully" effect. Traffic from each application still need to share the local and global channel when traversing from the source to the destination router. 
+
+\textit{MultiGrid and CrystalRouter prefer randomness over locality on dragonfly network.}
+Due to their high traffic volume, MultiGrid and CrystalRouter prefer random placement to evenly distribute their traffic. 
+Random router placement reduces the randomness by preserving the router-level locality, introducing potential local congestion and performance degradation to both applications. 
+Random partition placement makes it worse for MultiGrid and CrystalRouter as partition-level locality has been preserved. 
+
+
+\textit{AMG benefits from allocation with high extent of locality.} As the least communication intensive application in Workload~\Rmnum{1}, AMG prefers exclusive network resource without sharing with other applications. 
+The locality preserved by random router and random partition placement policy can reduce the  sharing of routers between different applications. 
+The performance of AMG can be greatly improved when random partition placement is applied.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
