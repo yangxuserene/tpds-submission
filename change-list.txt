@@ -1,0 +1,12 @@
+Section 1 - Introduction : This section is revised to clearly state the motivations and the problem, as well as the major contributions of this submission.
+
+Section 2 - Background: Add a new paragraph to describe the Cori, a dragonfly connected HPC system in production at Lawrence Berkeley National Lab. We also discuss the difference between the dragonfly topology used in this work and the Cori system. 
+
+section 3.2 . Detailed description about applications communication pattern is included. In particular, three new figures are added to demonstrate the communication matrix of each application. 
+section 3.3 . This section is revised to explicitly explain the choice of parameters for the dragonfly network used in our study. 
+
+section 7. In addition to the previously discussed placement policies, A new section is included to discuss two new placement policies. We use workload 1 to evaluate both placement policies whether they are effective in preventing "bully" effect. Experimental results show an interesting relation between the randomness of the allocation and application performance. 
+
+section 8. This section is revised to include more recent work about job placement on HPC systems. 
+
+section 9. This section is revised to discuss two possible directions for extending our work in the future. 
